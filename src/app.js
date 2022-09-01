@@ -1,17 +1,29 @@
 const express = require("express");
 const app = express();
+const morgan = require("morgan");
 
-// TODO: Follow instructions in the checkpoint to implement ths API.
+const pastesRouter = require("./pastes/pastes.router");
+const usersRouter = require("./users/users.router")
+app.use(express.json());
+app.use(morgan("dev"));
 
-// Not found handler
-app.use((request, response, next) => {
-  next(`Not found: ${request.originalUrl}`);
+//----DATA---
+const pastes = require("./data/pastes-data");
+
+//-----ROUTE LEVEL MIDDLEWARE-----
+app.use("/pastes", pastesRouter);
+app.use("/users", usersRouter);
+
+//---NOT FOUND HANDLER---
+app.use((req, res, next) => {
+  next({ status: 404, message: `Path "${req.originalUrl}" does not exist`});
 });
 
-// Error handler
-app.use((error, request, response, next) => {
-  console.error(error);
-  response.send(error);
+//---ERROR HANDLER---
+app.use((err, req, res, next) => {
+  const { status = 500, message = "Oh no! Something went wrong!" } = err
+  console.error(`Error: ${status}; ${message}`);
+  res.status(status).json({error: message});
 });
 
 module.exports = app;
